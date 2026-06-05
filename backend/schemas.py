@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional, List
-from datetime import datetime
+from typing import Optional, List, Any
+from datetime import datetime, date
 
 
 # User schemas
@@ -190,7 +190,7 @@ class TransactionBase(BaseModel):
 
 
 class TransactionCreate(TransactionBase):
-    pass
+    fund_type: Optional[str] = None
 
 
 class TransactionUpdate(BaseModel):
@@ -203,6 +203,7 @@ class TransactionResponse(TransactionBase):
     status: str
     receipt_number: Optional[str] = None
     approved_by: Optional[int] = None
+    rule_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 
@@ -274,3 +275,105 @@ class HierarchyTree(BaseModel):
 
 
 HierarchyTree.model_rebuild()
+
+
+# ── Remittance Rules ─────────────────────────────────────────────────────────
+
+class RemittanceRuleBase(BaseModel):
+    name: str
+    from_level: str
+    to_level: str
+    fund_type: str
+    rule_type: str
+    percentage: Optional[float] = None
+    fixed_amount: Optional[float] = None
+    minimum_amount: Optional[float] = None
+    maximum_amount: Optional[float] = None
+    frequency: str = "monthly"
+    effective_from: date
+    effective_to: Optional[date] = None
+    scope_entity_type: str
+    scope_entity_id: int
+    requires_dual_auth: bool = False
+
+
+class RemittanceRuleCreate(RemittanceRuleBase):
+    pass
+
+
+class RemittanceRuleUpdate(BaseModel):
+    name: Optional[str] = None
+    fund_type: Optional[str] = None
+    rule_type: Optional[str] = None
+    percentage: Optional[float] = None
+    fixed_amount: Optional[float] = None
+    minimum_amount: Optional[float] = None
+    maximum_amount: Optional[float] = None
+    frequency: Optional[str] = None
+    effective_from: Optional[date] = None
+    effective_to: Optional[date] = None
+    requires_dual_auth: Optional[bool] = None
+
+
+class UserBrief(BaseModel):
+    id: int
+    username: str
+    role: str
+
+    class Config:
+        from_attributes = True
+
+
+class RemittanceRuleResponse(RemittanceRuleBase):
+    id: int
+    is_active: bool
+    status: str
+    created_by_id: int
+    created_by: Optional[UserBrief] = None
+    approved_by_id: Optional[int] = None
+    approved_by: Optional[UserBrief] = None
+    approved_at: Optional[datetime] = None
+    second_approver_id: Optional[int] = None
+    second_approver: Optional[UserBrief] = None
+    second_approved_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class RemittanceRuleAuditLogResponse(BaseModel):
+    id: int
+    rule_id: int
+    action: str
+    changed_by_id: int
+    changed_by: Optional[UserBrief] = None
+    changed_at: datetime
+    previous_values: Optional[str] = None
+    new_values: Optional[str] = None
+    note: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class RemittanceCalculateRequest(BaseModel):
+    amount: float
+    fund_type: str
+    from_level: str
+    to_level: str
+    scope_entity_type: str
+    scope_entity_id: int
+
+
+class RemittanceCalculateResponse(BaseModel):
+    rule_name: str
+    rule_type: str
+    input_amount: float
+    calculated_amount: float
+    breakdown: str
+
+
+class SubmitApproveRequest(BaseModel):
+    note: Optional[str] = None

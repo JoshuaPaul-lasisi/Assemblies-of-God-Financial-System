@@ -6,11 +6,14 @@ sys.path.insert(0, os.path.dirname(__file__))
 from database import SessionLocal, engine, Base
 from models import (
     User, GeneralCouncil, District, Section, LocalChurch,
-    AllocationRule, DelegationRule, Transaction, Notification
+    AllocationRule, DelegationRule, Transaction, Notification,
+    RemittanceRule, RemittanceRuleAuditLog,
+    RemittanceRuleStatus, RemittanceFundType, RemittanceRuleType, RemittanceFrequency
 )
 from auth import get_password_hash
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import random
+import json
 
 Base.metadata.create_all(bind=engine)
 
@@ -19,7 +22,8 @@ db = SessionLocal()
 print("Seeding database...")
 
 # Clear existing data
-for model in [Notification, Transaction, AllocationRule, DelegationRule,
+for model in [Notification, Transaction, RemittanceRuleAuditLog, RemittanceRule,
+              AllocationRule, DelegationRule,
               User, LocalChurch, Section, District, GeneralCouncil]:
     db.query(model).delete()
 db.commit()
@@ -287,6 +291,192 @@ notifs = [
 ]
 for n in notifs:
     db.add(n)
+db.commit()
+
+# 10. Remittance Rules
+# Get one section and its district for scoped rules
+first_section = sections[0]
+first_district = districts[0]
+
+# "National Tithe Remittance Floor" — GC level, 10% min
+national_floor = RemittanceRule(
+    name="National Tithe Remittance Floor",
+    from_level="local_church",
+    to_level="section",
+    fund_type=RemittanceFundType.tithes,
+    rule_type=RemittanceRuleType.percentage,
+    percentage=10.0,
+    minimum_amount=None,
+    maximum_amount=None,
+    fixed_amount=None,
+    frequency=RemittanceFrequency.monthly,
+    is_active=True,
+    effective_from=date(2024, 1, 1),
+    effective_to=None,
+    created_by_id=admin.id,
+    scope_entity_type="general_council",
+    scope_entity_id=gc.id,
+    requires_dual_auth=False,
+    status=RemittanceRuleStatus.active,
+    approved_by_id=admin.id,
+    approved_at=datetime(2024, 1, 5),
+)
+db.add(national_floor)
+db.commit()
+db.refresh(national_floor)
+
+# "Section Tithe Remittance" — section level, 15% tithes, monthly, dual auth, active
+section_tithe = RemittanceRule(
+    name="Section Tithe Remittance",
+    from_level="local_church",
+    to_level="section",
+    fund_type=RemittanceFundType.tithes,
+    rule_type=RemittanceRuleType.percentage,
+    percentage=15.0,
+    minimum_amount=None,
+    maximum_amount=None,
+    fixed_amount=None,
+    frequency=RemittanceFrequency.monthly,
+    is_active=True,
+    effective_from=date(2024, 1, 1),
+    effective_to=None,
+    created_by_id=admin.id,
+    scope_entity_type="section",
+    scope_entity_id=first_section.id,
+    requires_dual_auth=True,
+    status=RemittanceRuleStatus.active,
+    approved_by_id=admin.id,
+    approved_at=datetime(2024, 1, 10),
+    second_approver_id=admin.id,
+    second_approved_at=datetime(2024, 1, 12),
+)
+db.add(section_tithe)
+db.commit()
+db.refresh(section_tithe)
+
+# "Section Building Fund" — section level, fixed ₦2,000/month, active
+section_building = RemittanceRule(
+    name="Section Building Fund",
+    from_level="local_church",
+    to_level="section",
+    fund_type=RemittanceFundType.building_fund,
+    rule_type=RemittanceRuleType.fixed,
+    percentage=None,
+    minimum_amount=None,
+    maximum_amount=None,
+    fixed_amount=2000.0,
+    frequency=RemittanceFrequency.monthly,
+    is_active=True,
+    effective_from=date(2024, 1, 1),
+    effective_to=None,
+    created_by_id=admin.id,
+    scope_entity_type="section",
+    scope_entity_id=first_section.id,
+    requires_dual_auth=False,
+    status=RemittanceRuleStatus.active,
+    approved_by_id=admin.id,
+    approved_at=datetime(2024, 1, 10),
+)
+db.add(section_building)
+db.commit()
+db.refresh(section_building)
+
+# "Section Missions Offering" — section level, 20% of missions, quarterly, active
+section_missions = RemittanceRule(
+    name="Section Missions Offering",
+    from_level="local_church",
+    to_level="section",
+    fund_type=RemittanceFundType.missions_fund,
+    rule_type=RemittanceRuleType.percentage,
+    percentage=20.0,
+    minimum_amount=None,
+    maximum_amount=None,
+    fixed_amount=None,
+    frequency=RemittanceFrequency.quarterly,
+    is_active=True,
+    effective_from=date(2024, 1, 1),
+    effective_to=None,
+    created_by_id=admin.id,
+    scope_entity_type="section",
+    scope_entity_id=first_section.id,
+    requires_dual_auth=False,
+    status=RemittanceRuleStatus.active,
+    approved_by_id=admin.id,
+    approved_at=datetime(2024, 1, 10),
+)
+db.add(section_missions)
+db.commit()
+db.refresh(section_missions)
+
+# Add audit log entries for each rule
+audit_entries = [
+    RemittanceRuleAuditLog(
+        rule_id=national_floor.id, action="created", changed_by_id=admin.id,
+        changed_at=datetime(2024, 1, 1, 9, 0),
+        new_values=json.dumps({"name": national_floor.name, "status": "draft"}),
+        note="Initial creation of national tithe floor"
+    ),
+    RemittanceRuleAuditLog(
+        rule_id=national_floor.id, action="approved", changed_by_id=admin.id,
+        changed_at=datetime(2024, 1, 5, 10, 0),
+        new_values=json.dumps({"status": "active"}),
+        note="Approved by GC Admin"
+    ),
+    RemittanceRuleAuditLog(
+        rule_id=national_floor.id, action="activated", changed_by_id=admin.id,
+        changed_at=datetime(2024, 1, 5, 10, 0),
+        note="Activated after single approval"
+    ),
+    RemittanceRuleAuditLog(
+        rule_id=section_tithe.id, action="created", changed_by_id=admin.id,
+        changed_at=datetime(2024, 1, 8, 9, 0),
+        new_values=json.dumps({"name": section_tithe.name, "status": "draft"}),
+        note="Section tithe rule created"
+    ),
+    RemittanceRuleAuditLog(
+        rule_id=section_tithe.id, action="approved", changed_by_id=admin.id,
+        changed_at=datetime(2024, 1, 10, 11, 0),
+        new_values=json.dumps({"approved_by_id": admin.id}),
+        note="First approval given"
+    ),
+    RemittanceRuleAuditLog(
+        rule_id=section_tithe.id, action="approved", changed_by_id=admin.id,
+        changed_at=datetime(2024, 1, 12, 14, 0),
+        new_values=json.dumps({"second_approver_id": admin.id, "status": "active"}),
+        note="Second approval given — dual auth complete"
+    ),
+    RemittanceRuleAuditLog(
+        rule_id=section_tithe.id, action="activated", changed_by_id=admin.id,
+        changed_at=datetime(2024, 1, 12, 14, 0),
+        note="Activated after dual approval"
+    ),
+    RemittanceRuleAuditLog(
+        rule_id=section_building.id, action="created", changed_by_id=admin.id,
+        changed_at=datetime(2024, 1, 8, 9, 30),
+        new_values=json.dumps({"name": section_building.name, "status": "draft"}),
+        note="Building fund rule created"
+    ),
+    RemittanceRuleAuditLog(
+        rule_id=section_building.id, action="approved", changed_by_id=admin.id,
+        changed_at=datetime(2024, 1, 10, 11, 30),
+        new_values=json.dumps({"status": "active"}),
+        note="Approved"
+    ),
+    RemittanceRuleAuditLog(
+        rule_id=section_missions.id, action="created", changed_by_id=admin.id,
+        changed_at=datetime(2024, 1, 8, 10, 0),
+        new_values=json.dumps({"name": section_missions.name, "status": "draft"}),
+        note="Missions offering rule created"
+    ),
+    RemittanceRuleAuditLog(
+        rule_id=section_missions.id, action="approved", changed_by_id=admin.id,
+        changed_at=datetime(2024, 1, 10, 12, 0),
+        new_values=json.dumps({"status": "active"}),
+        note="Approved"
+    ),
+]
+for entry in audit_entries:
+    db.add(entry)
 db.commit()
 
 db.close()

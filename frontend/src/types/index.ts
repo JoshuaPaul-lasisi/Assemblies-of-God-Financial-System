@@ -129,3 +129,60 @@ export interface HierarchyNode {
   member_count?: number;
   children: HierarchyNode[];
 }
+
+export interface UserBrief {
+  id: number;
+  username: string;
+  role: string;
+}
+
+export interface RemittanceRule {
+  id: number;
+  name: string;
+  from_level: string;
+  to_level: string;
+  fund_type: string;
+  rule_type: string;
+  percentage: number | null;
+  fixed_amount: number | null;
+  minimum_amount: number | null;
+  maximum_amount: number | null;
+  frequency: string;
+  is_active: boolean;
+  effective_from: string;
+  effective_to: string | null;
+  scope_entity_type: string;
+  scope_entity_id: number;
+  requires_dual_auth: boolean;
+  status: string;
+  created_by_id: number;
+  created_by: UserBrief | null;
+  approved_by_id: number | null;
+  approved_by: UserBrief | null;
+  approved_at: string | null;
+  second_approver_id: number | null;
+  second_approver: UserBrief | null;
+  second_approved_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RemittanceRuleAuditLog {
+  id: number;
+  rule_id: number;
+  action: string;
+  changed_by_id: number;
+  changed_by: UserBrief | null;
+  changed_at: string;
+  previous_values: string | null;
+  new_values: string | null;
+  note: string | null;
+}
+
+export interface RemittanceCalculateResponse {
+  rule_name: string;
+  rule_type: string;
+  input_amount: number;
+  calculated_amount: number;
+  breakdown: string;
+}

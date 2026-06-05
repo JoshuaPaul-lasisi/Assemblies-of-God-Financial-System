@@ -1,5 +1,5 @@
 import api from './client';
-import type { Token, User, Transaction, AllocationRule, DelegationRule, Report, GeneralCouncil, District, Section, LocalChurch } from '../types';
+import type { Token, User, Transaction, AllocationRule, DelegationRule, Report, GeneralCouncil, District, Section, LocalChurch, RemittanceRule, RemittanceRuleAuditLog, RemittanceCalculateResponse } from '../types';
 
 // Auth
 export const login = (username: string, password: string) =>
@@ -137,3 +137,37 @@ export const downloadReport = (id: number) => {
 
 export const getMonthlySummary = (params?: any) =>
   api.get('/api/reports/summary/monthly', { params }).then(r => r.data);
+
+// Remittance Rules
+export const listRemittanceRules = (params?: any) =>
+  api.get<RemittanceRule[]>('/api/remittance-rules', { params }).then(r => r.data);
+
+export const createRemittanceRule = (data: any) =>
+  api.post<RemittanceRule>('/api/remittance-rules', data).then(r => r.data);
+
+export const updateRemittanceRule = (id: number, data: any) =>
+  api.put<RemittanceRule>(`/api/remittance-rules/${id}`, data).then(r => r.data);
+
+export const submitRemittanceRule = (id: number, note?: string) =>
+  api.post<RemittanceRule>(`/api/remittance-rules/${id}/submit`, { note }).then(r => r.data);
+
+export const approveRemittanceRule = (id: number, note?: string) =>
+  api.post<RemittanceRule>(`/api/remittance-rules/${id}/approve`, { note }).then(r => r.data);
+
+export const secondApproveRemittanceRule = (id: number, note?: string) =>
+  api.post<RemittanceRule>(`/api/remittance-rules/${id}/second-approve`, { note }).then(r => r.data);
+
+export const rejectRemittanceRule = (id: number, note?: string) =>
+  api.post<RemittanceRule>(`/api/remittance-rules/${id}/reject`, { note }).then(r => r.data);
+
+export const deactivateRemittanceRule = (id: number, note?: string) =>
+  api.post<RemittanceRule>(`/api/remittance-rules/${id}/deactivate`, { note }).then(r => r.data);
+
+export const getRemittanceRuleAuditLog = (id: number) =>
+  api.get<RemittanceRuleAuditLog[]>(`/api/remittance-rules/${id}/audit-log`).then(r => r.data);
+
+export const getAllRemittanceAuditLogs = (params?: any) =>
+  api.get<RemittanceRuleAuditLog[]>('/api/remittance-rules/audit-log/all', { params }).then(r => r.data);
+
+export const calculateRemittance = (data: any) =>
+  api.post<RemittanceCalculateResponse>('/api/remittance-rules/calculate', data).then(r => r.data);

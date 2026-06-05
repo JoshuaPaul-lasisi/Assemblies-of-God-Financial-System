@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 # Import and include routers
-from routers import auth, hierarchy, transactions, allocations, reports, dashboard, websocket
+from routers import auth, hierarchy, transactions, allocations, reports, dashboard, websocket, remittance_rules
 
 app.include_router(auth.router)
 app.include_router(hierarchy.router)
@@ -30,6 +30,7 @@ app.include_router(allocations.router)
 app.include_router(reports.router)
 app.include_router(dashboard.router)
 app.include_router(websocket.router)
+app.include_router(remittance_rules.router)
 
 
 @app.get("/")

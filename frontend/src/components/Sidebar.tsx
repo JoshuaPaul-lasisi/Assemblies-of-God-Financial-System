@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Network, ArrowLeftRight, Layers,
-  FileText, Receipt, Bell, LogOut, Building2
+  FileText, Receipt, Bell, LogOut, Building2, GitMerge
 } from 'lucide-react';
 import type { User } from '../types';
 
@@ -17,6 +17,7 @@ const navItems = [
   { to: '/hierarchy', icon: Network, label: 'Hierarchy' },
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transactions' },
   { to: '/allocations', icon: Layers, label: 'Allocations' },
+  { to: '/remittance-rules', icon: GitMerge, label: 'Remittance Rules' },
   { to: '/receipts', icon: Receipt, label: 'Receipts' },
   { to: '/reports', icon: FileText, label: 'Reports' },
   { to: '/notifications', icon: Bell, label: 'Notifications' },

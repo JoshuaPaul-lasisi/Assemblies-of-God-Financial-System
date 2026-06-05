@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, date
 from database import get_db
 import models
 import schemas
@@ -92,8 +92,50 @@ async def create_transaction(
     from_level = data.from_entity_type or "local_church"
     receipt_number = generate_receipt_number(db, from_level)
 
+    # Look up applicable remittance rule if this is a remittance transaction
+    rule_id = None
+    dump = data.model_dump()
+    fund_type_val = dump.pop("fund_type", None)
+
+    if data.transaction_type == "remittance" and data.from_entity_type and data.to_entity_type:
+        today = date.today()
+        scope_type = data.from_entity_type
+        scope_id = data.from_entity_id
+        matched_rule = db.query(models.RemittanceRule).filter(
+            models.RemittanceRule.status == "active",
+            models.RemittanceRule.is_active == True,
+            models.RemittanceRule.from_level == data.from_entity_type,
+            models.RemittanceRule.to_level == data.to_entity_type,
+            models.RemittanceRule.scope_entity_type == scope_type,
+            models.RemittanceRule.scope_entity_id == scope_id,
+            models.RemittanceRule.effective_from <= today,
+        ).filter(
+            (models.RemittanceRule.effective_to == None) |
+            (models.RemittanceRule.effective_to >= today)
+        ).first()
+
+        if matched_rule:
+            rule_id = matched_rule.id
+            # Auto-calculate amount if rule found
+            if matched_rule.rule_type == "percentage" and matched_rule.percentage:
+                calculated = data.amount * matched_rule.percentage / 100.0
+                if matched_rule.maximum_amount:
+                    calculated = min(calculated, matched_rule.maximum_amount)
+                dump["amount"] = round(calculated, 2)
+            elif matched_rule.rule_type == "fixed" and matched_rule.fixed_amount:
+                dump["amount"] = matched_rule.fixed_amount
+            elif matched_rule.rule_type == "hybrid":
+                pct = matched_rule.percentage or 0.0
+                pct_result = data.amount * pct / 100.0
+                minimum = matched_rule.minimum_amount or 0.0
+                calculated = max(pct_result, minimum)
+                if matched_rule.maximum_amount:
+                    calculated = min(calculated, matched_rule.maximum_amount)
+                dump["amount"] = round(calculated, 2)
+
     tx = models.Transaction(
-        **data.model_dump(),
+        **dump,
+        rule_id=rule_id,
         status=initial_status,
         receipt_number=receipt_number
     )

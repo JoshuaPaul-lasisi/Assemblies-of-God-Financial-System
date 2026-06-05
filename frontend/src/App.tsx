@@ -10,6 +10,7 @@ import { AllocationsPage } from './pages/AllocationsPage';
 import { ReceiptsPage } from './pages/ReceiptsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { NotificationsPage } from './pages/NotificationsPage';
+import { RemittanceRules } from './pages/RemittanceRules';
 import { useAuth } from './hooks/useAuth';
 import { useWebSocket, type WSMessage } from './hooks/useWebSocket';
 import { Wifi, WifiOff } from 'lucide-react';
@@ -61,6 +62,7 @@ function AppLayout() {
             <Route path="/allocations" element={<AllocationsPage canEdit={canEditAllocations} />} />
             <Route path="/receipts" element={<ReceiptsPage />} />
             <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/remittance-rules" element={<RemittanceRules currentUser={user} />} />
             <Route path="/notifications" element={<NotificationsPage wsMessage={wsMessage} />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

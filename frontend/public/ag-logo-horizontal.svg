@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 60" width="320" height="60">
+  <rect width="320" height="60" fill="#003087"/>
+  <!-- Yellow top stripe -->
+  <rect width="320" height="6" fill="#FFD700"/>
+  <!-- Yellow bottom stripe -->
+  <rect y="54" width="320" height="6" fill="#FFD700"/>
+  <!-- Mini shield -->
+  <path d="M12 10 L42 18 L42 40 Q42 55 27 58 Q12 55 12 40 L12 18 Z" fill="#FFD700"/>
+  <text x="27" y="42" font-family="Arial Black" font-size="18" font-weight="900" fill="#003087" text-anchor="middle">AG</text>
+  <!-- Text -->
+  <text x="190" y="28" font-family="Arial Black, sans-serif" font-size="18" font-weight="900" fill="#FFD700" text-anchor="middle" letter-spacing="2">ASSEMBLIES OF GOD</text>
+  <text x="190" y="46" font-family="Arial, sans-serif" font-size="10" fill="white" text-anchor="middle" letter-spacing="1">FINANCIAL MANAGEMENT SYSTEM</text>
+</svg>

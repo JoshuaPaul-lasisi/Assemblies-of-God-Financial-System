@@ -171,3 +171,19 @@ export const getAllRemittanceAuditLogs = (params?: any) =>
 
 export const calculateRemittance = (data: any) =>
   api.post<RemittanceCalculateResponse>('/api/remittance-rules/calculate', data).then(r => r.data);
+
+// User Management (general_council_admin only)
+export const getUsers = () =>
+  api.get<User[]>('/api/users/').then(r => r.data);
+
+export const toggleUserActive = (userId: number) =>
+  api.patch<User>(`/api/users/${userId}/toggle-active`).then(r => r.data);
+
+export const updateUser = (userId: number, data: Partial<Pick<User, 'username' | 'email' | 'role' | 'hierarchy_level' | 'entity_id'>>) =>
+  api.patch<User>(`/api/users/${userId}`, data).then(r => r.data);
+
+export const deleteUser = (userId: number) =>
+  api.delete<User>(`/api/users/${userId}`).then(r => r.data);
+
+export const createUser = (data: { username: string; email: string; password: string; role: string; hierarchy_level: string; entity_id?: number }) =>
+  api.post<User>('/api/auth/register', data).then(r => r.data);

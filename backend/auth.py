@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
@@ -8,7 +9,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 import models
 
-SECRET_KEY = "ag-financial-system-secret-key-2024-assemblies-of-god"
+SECRET_KEY = os.getenv("SECRET_KEY", "ag-financial-system-secret-key-2024-assemblies-of-god")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 480  # 8 hours
 
@@ -52,12 +53,17 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     user = db.query(models.User).filter(models.User.username == username).first()
     if user is None:
         raise credentials_exception
+    if not user.is_active:
+        raise HTTPException(
+            status_code=403,
+            detail="Account has been deactivated. Contact your administrator."
+        )
     return user
 
 
 def get_current_active_user(current_user: models.User = Depends(get_current_user)):
     if not current_user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise HTTPException(status_code=403, detail="Account has been deactivated. Contact your administrator.")
     return current_user
 
 

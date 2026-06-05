@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
@@ -12,16 +13,18 @@ app = FastAPI(
     version="1.0.0"
 )
 
+origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Import and include routers
-from routers import auth, hierarchy, transactions, allocations, reports, dashboard, websocket, remittance_rules
+from routers import auth, hierarchy, transactions, allocations, reports, dashboard, websocket, remittance_rules, users
 
 app.include_router(auth.router)
 app.include_router(hierarchy.router)
@@ -31,6 +34,7 @@ app.include_router(reports.router)
 app.include_router(dashboard.router)
 app.include_router(websocket.router)
 app.include_router(remittance_rules.router)
+app.include_router(users.router)
 
 
 @app.get("/")
@@ -44,4 +48,4 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"status": "healthy"}
+    return {"status": "ok"}

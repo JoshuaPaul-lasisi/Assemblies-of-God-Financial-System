@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" width="120" height="140">
+  <!-- Shield background -->
+  <path d="M60 5 L110 25 L110 80 Q110 120 60 135 Q10 120 10 80 L10 25 Z" fill="#FFD700" stroke="#003087" stroke-width="4"/>
+  <!-- Inner shield -->
+  <path d="M60 18 L98 34 L98 78 Q98 110 60 123 Q22 110 22 78 L22 34 Z" fill="#003087"/>
+  <!-- AG letters -->
+  <text x="60" y="85" font-family="Arial Black, sans-serif" font-size="42" font-weight="900" fill="#FFD700" text-anchor="middle">AG</text>
+  <!-- All The Gospel text -->
+  <text x="60" y="58" font-family="Arial, sans-serif" font-size="8" fill="white" text-anchor="middle" font-weight="bold">ALL THE GOSPEL</text>
+  <!-- Book/bible lines above text -->
+  <rect x="42" y="42" width="36" height="4" rx="1" fill="white" opacity="0.6"/>
+  <rect x="45" y="48" width="30" height="3" rx="1" fill="white" opacity="0.4"/>
+</svg>

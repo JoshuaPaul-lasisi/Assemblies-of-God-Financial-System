@@ -49,3 +49,23 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/health/db")
+def health_db():
+    from database import SessionLocal
+    import models
+    db = SessionLocal()
+    try:
+        user_count = db.query(models.User).count()
+        admin = db.query(models.User).filter(models.User.username == "admin").first()
+        return {
+            "status": "ok",
+            "user_count": user_count,
+            "admin_exists": admin is not None,
+            "admin_active": admin.is_active if admin else None,
+        }
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+    finally:
+        db.close()

@@ -51,6 +51,20 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/admin/seed")
+def admin_seed(key: str):
+    if key != os.getenv("SEED_SECRET", ""):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="forbidden")
+    import subprocess
+    result = subprocess.run(
+        ["python", "seed.py"],
+        capture_output=True, text=True,
+        cwd=os.path.dirname(os.path.abspath(__file__))
+    )
+    return {"returncode": result.returncode, "stdout": result.stdout[-3000:], "stderr": result.stderr[-3000:]}
+
+
 @app.get("/health/db")
 def health_db():
     from database import SessionLocal

@@ -21,7 +21,9 @@ export function Login({ onLogin }: Props) {
       const data = await login(username, password);
       onLogin(data.access_token, data.user);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Invalid credentials. Please try again.');
+      const detail = err.response?.data?.detail;
+      const debugInfo = `status=${err.response?.status ?? 'none'} code=${err.code ?? 'none'} msg=${err.message} url=${err.config?.baseURL ?? 'none'}`;
+      setError(detail || `Invalid credentials. Please try again. [${debugInfo}]`);
     } finally {
       setLoading(false);
     }

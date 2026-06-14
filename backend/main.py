@@ -73,11 +73,22 @@ def health_db():
     try:
         user_count = db.query(models.User).count()
         admin = db.query(models.User).filter(models.User.username == "admin").first()
+        from auth import verify_password
+        pw_ok = None
+        pw_error = None
+        if admin:
+            try:
+                pw_ok = verify_password("admin123", admin.hashed_password)
+            except Exception as e:
+                pw_error = str(e)
         return {
             "status": "ok",
             "user_count": user_count,
             "admin_exists": admin is not None,
             "admin_active": admin.is_active if admin else None,
+            "hash_prefix": admin.hashed_password[:10] if admin else None,
+            "password_check": pw_ok,
+            "password_check_error": pw_error,
         }
     except Exception as e:
         return {"status": "error", "detail": str(e)}
